@@ -1,0 +1,10 @@
+<label class="switch">
+  <a id="button" href="#"></a>
+  <input type="checkbox">
+  <span class="slider round"></span>
+  <p>Let It Snow</p>
+    
+</label>
+
+  <a href="java.html">Java Game</a>
+  <a href="java.html">Java Game</a>
