@@ -1,0 +1,174 @@
+[ -----------------------------------------------------------------
+  AC.CC.HOLDS - PowerOn Easy Writer 
+  -----------------------------------------------------------------
+  THIS IS A MODIFIED VERSION OF CC.HOLDS WITH AN HTML DISPLAY BY AUSTIN CASSEL]
+
+[DISPLAY HOLDS ON ACCOUNT ]
+WINDOWS
+TARGET=ACCOUNT
+
+DEFINE
+ FOUND=NUMBER
+ TRUE=1
+ FALSE=0
+ HOLD=CHARACTER ARRAY(19)
+ HOLDS=MONEY
+ LOOP=NUMBER
+ CUNAME =     "TruPartner Credit Union"
+ CUSTREET       =     "1717 Western Ave"
+ CUCITY =     "Cincinnati, OH  45214-2004"
+ CUPHONE        =     "(513)241-2050 or (800)582-7536"
+ CUWEB  =     "www.TruPartnerCU.org"
+END
+
+PRINT TITLE="Credit Card Holds"
+ HTMLVIEWOPEN
+ HTMLVIEWLINE("<html>")
+ HTMLVIEWLINE("<head>")
+ HTMLVIEWLINE("<title>"+CUNAME+"</title>")              [DISPLAYS THE CREDIT UNIONS INFORMATION] 
+ HTMLVIEWLINE("</head>")
+ HTMLVIEWLINE("<body bgcolor="+"#D2FFFF"+">")
+ HTMLVIEWLINE("<center><h1>"+CUNAME+"</h1>")
+ HTMLVIEWLINE("<font size=5>"+CUSTREET+"<br>")
+ HTMLVIEWLINE(""+CUCITY+"<br>")
+ HTMLVIEWLINE(""+CUPHONE+"<br>")
+ HTMLVIEWLINE(""+CUWEB+"<br>")
+ HTMLVIEWLINE("</center>")
+
+ HTMLVIEWLINE("<br>")
+ HTMLVIEWLINE("<br>")
+
+   HOLD(0)="General"
+   HOLD(1)="Check Deposit"
+   HOLD(2)="Certified Check"
+   HOLD(3)=""
+   HOLD(4)="Signature Authorization"
+   HOLD(5)="Loan Pledge"
+   HOLD(6)=""
+   HOLD(7)=""
+   HOLD(8)=""
+   HOLD(9)=""
+   HOLD(10)="" 
+   HOLD(11)=""
+   HOLD(12)="Uncollected Fee"
+   HOLD(13)=""
+   HOLD(14)="Bill Payment"
+   HOLD(15)="" [Bill Payment Info]
+   HOLD(16)="" [Unauthorized ACH Stop]
+   HOLD(17)="" [ACH Orig]
+   HOLD(18)="" [ACH DNE]
+   FOR EACH LOAN WITH (LOAN:TYPE=90 AND LOAN:CLOSEDATE='--/--/--') OR
+                      (LOAN:TYPE=91 AND LOAN:CLOSEDATE='--/--/--') OR
+                      (LOAN:TYPE=92 AND LOAN:CLOSEDATE='--/--/--') OR 
+                      (LOAN:TYPE=93 AND LOAN:CLOSEDATE='--/--/--') OR
+                      (LOAN:TYPE=94 AND LOAN:CLOSEDATE='--/--/--') OR
+                      (LOAN:TYPE=95 AND LOAN:CLOSEDATE='--/--/--') OR
+                      (LOAN:TYPE=97 AND LOAN:CLOSEDATE='--/--/--') 
+
+    DO
+     HTMLVIEWLINE("<P><B>" + "Credit Card Holds as of " + FORMAT("99/99/99",SYSTEMDATE) + " at " 
+     + FORMAT("99:99",SYSACTUALTIME))
+     HTMLVIEWLINE("<BR>")
+     HTMLVIEWLINE(ACCOUNT:NUMBER + "&nbsp;&nbsp;&nbsp;&nbsp;" + NAME:SHORTNAME + "&nbsp;&nbsp;" + LOAN:ID + "&nbsp;&nbsp;" + LOAN:DESCRIPTION)
+     HTMLVIEWLINE("<BR>")
+     HTMLVIEWLINE(REPEATCHR("-",85))
+     HTMLVIEWLINE("<br>")
+
+    HOLDS=$0.00                                                      [HOLDS (OUR TOTAL) IS = TO 0.00]
+    FOUND=FALSE
+     HTMLVIEWLINE("<TABLE WIDTH=35%>")                               [SETUP FOR THE TABLE]
+      HTMLVIEWLINE("<TR>")
+       HTMLVIEWLINE("<TH ALIGN=LEFT>HOLD</TH>")                      [THE DATA THATS DISPLAYED IN EACH COLLUMN]
+       HTMLVIEWLINE("<TH ALIGN=LEFT>PLACED</TH>")
+       HTMLVIEWLINE("<TH ALIGN=RIGHT>AMOUNT</TH>")
+       HTMLVIEWLINE("<TH ALIGN=RIGHT>EXPIRES</TH>")
+       HTMLVIEWLINE("<TH ALIGN=RIGHT>TIME</TH>")
+      HTMLVIEWLINE("</TR>")
+
+
+     FOR EACH LOAN HOLD WITH(LOAN HOLD:TYPE>=0 AND LOAN HOLD:TYPE<=18AND
+                              LOAN HOLD:TYPE<>3 AND 
+                              LOAN HOLD:TYPE<>6 AND
+                              LOAN HOLD:TYPE<>7 AND
+                              LOAN HOLD:TYPE<>8 AND
+                              LOAN HOLD:TYPE<>9 AND
+                              LOAN HOLD:TYPE<>10 AND
+                              LOAN HOLD:TYPE<>11 AND
+                              LOAN HOLD:TYPE<>13 AND
+                              LOAN HOLD:TYPE<>15 AND
+                              LOAN HOLD:TYPE<>16 AND
+                              LOAN HOLD:TYPE<>17 AND
+                              LOAN HOLD:TYPE<>18 AND
+                              LOAN HOLD:MATCHDATE='--/--/--' AND       
+                              (LOAN HOLD:EXPIRATIONDATE='--/--/--' OR  
+                               LOAN HOLD:EXPIRATIONDATE>SYSTEMDATE OR 
+                              (LOAN HOLD:EXPIRATIONDATE=SYSTEMDATE AND
+                              LOAN HOLD:EXPIRATIONTIME>SYSACTUALTIME)))
+      DO
+       FOUND=TRUE
+       IF LOAN HOLD:TYPE=04 THEN                    [LOAN TYPE = 4]
+        DO
+        HTMLVIEWLINE("<TR>")
+          
+           HTMLVIEWLINE("<TD>"+LOAN HOLD:PAYEENAME+"</TD>")
+           HTMLVIEWLINE("<TD>"+FORMAT("99/99/9999",LOAN HOLD:EFFECTIVEDATE)+"</TD>")
+           HTMLVIEWLINE("<TD ALIGN=RIGHT> &#036;"+FORMAT("###,##9.99",LOAN HOLD:AMOUNT)+"</TD>")
+
+           IF LOAN HOLD:EXPIRATIONTIME=0 THEN
+           DO
+           HTMLVIEWLINE("<TD ALIGN=RIGHT>"+FORMAT("99/99/99",LOAN HOLD:EXPIRATIONDATE)+"</TD>")[ + " at " + "00:00"]
+           HTMLVIEWLINE("<TD ALIGN=RIGHT>00:00</TD>")
+           END
+
+           ELSE 
+           DO
+           HTMLVIEWLINE("<TD ALIGN=RIGHT>"+FORMAT("99/99/99",LOAN HOLD:EXPIRATIONDATE)+"</TD>")[+ " at " + FORMAT("##:##",LOAN HOLD:EXPIRATIONTIME)]
+           HTMLVIEWLINE("<TD ALIGN=RIGHT>"+FORMAT("##:##",LOAN HOLD:EXPIRATIONTIME)+"</TD>")
+           END
+
+        HTMLVIEWLINE("</TR>")
+        HOLDS=HOLDS + LOAN HOLD:AMOUNT
+
+        END                                         [END LOAN TYPE 4]
+                                        
+       ELSE                                         [LOAN TYPE != 4]
+        DO                                          
+       HTMLVIEWLINE("<TR>")
+          
+           HTMLVIEWLINE("<TD>"+FORMAT("99", LOAN HOLD:TYPE)+"</TD>")
+           HTMLVIEWLINE("<TD>"+FORMAT("99/99/9999",LOAN HOLD:EFFECTIVEDATE)+"</TD>")
+           HTMLVIEWLINE("<TD ALIGN=RIGHT> &#036;"+FORMAT("###,##9.99",LOAN HOLD:AMOUNT)+"</TD>")
+           IF LOAN HOLD:EXPIRATIONTIME=0 THEN
+           DO
+           HTMLVIEWLINE("<TD ALIGN=RIGHT>"+FORMAT("99/99/99",LOAN HOLD:EXPIRATIONDATE)+"</TD>")[ + " at " + "00:00"]
+           HTMLVIEWLINE("<TD ALIGN=RIGHT>00:00</TD>")
+           END
+
+           ELSE 
+           DO
+           HTMLVIEWLINE("<TD ALIGN=RIGHT>"+FORMAT("99/99/99",LOAN HOLD:EXPIRATIONDATE)+"</TD>")[+ " at " + FORMAT("##:##",LOAN HOLD:EXPIRATIONTIME)]
+           HTMLVIEWLINE("<TD ALIGN=RIGHT>"+FORMAT("##:##",LOAN HOLD:EXPIRATIONTIME)+"</TD>")
+           END
+
+           HOLDS=HOLDS + LOAN HOLD:AMOUNT
+           HTMLVIEWLINE("</TR>")
+
+        END                                         [END LOAN TYPE != 4]
+      END                                          [FOR EACH LOAN HOLD WITH]
+      HTMLVIEWLINE("</TABLE>")
+     END                                          [FOR EACH LOAN WITH]
+     HTMLVIEWLINE("<br>")
+     HTMLVIEWLINE("<br>")
+     IF FOUND=FALSE THEN
+      DO
+       HTMLVIEWLINE("No Holds Found On This Account")
+      END
+     ELSE
+      DO
+       HTMLVIEWLINE("Total Hold Amount " + "&#036;" + FORMAT("###,###,##9.99",HOLDS))
+      END
+
+     HTMLVIEWLINE("</body>")
+     HTMLVIEWLINE("</html>")
+     HTMLVIEWDISPLAY
+    END [PRINT]

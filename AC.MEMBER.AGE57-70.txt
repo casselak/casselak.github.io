@@ -1,0 +1,48 @@
+ [ -----------------------------------------------------------------
+  AC.MEMBER.AGE - PowerOn Easy Writer 
+  ----------------------------------------------------------------- ]
+
+TARGET=ACCOUNT
+
+DEFINE 
+ COUNT=NUMBER
+ SHRBAL=MONEY
+END
+
+SELECT
+ ((SYSTEMDATE - NAME:BIRTHDATE) > (57*365)) AND
+ ((SYSTEMDATE - NAME:BIRTHDATE) < (70*365)) AND
+ ACCOUNT:OPENDATE <> ('-/-/-') AND
+ ACCOUNT:CLOSEDATE = ('-/-/-') AND
+ NOT ANY LOAN WITH (LOAN:CHARGEOFFDATE <> '-/-/-') AND
+ NOT ANY SHARE WITH (SHARE:CHARGEOFFDATE <> '-/-/-') 
+END
+
+SORT
+ ACCOUNT:ACTIVITYDATE
+END
+
+PRINT TITLE="Number of members that are ages 57 to 70" REPORTCATEGORY="MISCELLANE"
+ HEADER="Account Number  Short Name        Birth Date"
+ HEADER="--------------------------------------------------------------------"
+SHRBAL = $0.00
+FOR EACH SHARE WITH (SHARE:CLOSEDATE=('-/-/-'))
+ DO
+  SHRBAL = SHRBAL + SHARE:BALANCE
+ END
+IF SHRBAL > $0.00 THEN
+ DO
+ COL=001 ACCOUNT:NUMBER
+ COL=012 NAME:LOCATOR  
+ COL=017 NAME:SHORTNAME
+ COL=044 NAME:BIRTHDATE
+ COL=060 ACCOUNT:ACTIVITYDATE
+ COUNT = COUNT + 1
+ NEWLINE
+ END
+END
+TOTAL
+HEADER="--------------------------------------------------------------------"
+NEWLINE
+COL=010 RIGHT COUNT 
+END
